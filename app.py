@@ -5,7 +5,17 @@ from db import init_db
 
 app = Flask(__name__)
 
-#--------request_id----
+
+#-----------HOME-------------
+
+@app.route('/')
+def home():
+    return {
+        "success": True,
+        "message": "Products API is running successfully"
+    }
+
+#--------REQUEST_ID---------
 
 
 def generate_request_id():
