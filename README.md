@@ -42,8 +42,11 @@ GET /products/search?name=product_name
 ## ▶️ How to run
 
 ```bash
-pip install flask sqlite3
+pip install -r requirements.txt
 python app.py
 
+
+---
 ## 👩‍💻 Author
 Toqa - Backend Developer (Learning Phase)
+---
