@@ -1,8 +1,9 @@
 import sqlite3
 from db import *
 from utils.logger import log
-from utils.validation import validate_product_name
+from utils.validation import *
 from utils.error_handler import handle_errors
+from werkzeug.security import generate_password_hash
 
 
 #---------ADD-----------
@@ -116,3 +117,22 @@ def search_product_service(name, request_id):
     log(f"Product found: {name}", request_id)
 
     return {"success": True, "data": results, 'message':f'{name} found'}, 200
+  
+  
+#---------------REGISTER_USER--------------
+@handle_errors
+def register_user_service(username, password, request_id):
+  
+  log(f'register request recieved for {username}', request_id)
+  
+  error= validate_user(username, password)
+  if error:
+    log(f'Validation failed {error}', request_id, level='ERROR')
+    return error
+  
+  hashed_password= generate_password_hash(password)
+  
+  add_user_to_db(username, hashed_password)
+  
+  log(f'User registered successfully {username}', request_id)
+  return{'sucsess': True, 'data':f'user {username} registered successfully'}, 201

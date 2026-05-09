@@ -4,6 +4,7 @@ def get_connection():
   conn= sqlite3.connect('products.db',timeout=10)
   return conn
   
+#---------------------init----------------------
 def init_db():
   conn= get_connection()
   cursor= conn.cursor()
@@ -14,6 +15,24 @@ def init_db():
                    name TEXT UNIQUE
                  )
                  ''')
+  conn.commit()
+  conn.close()
+  
+  
+#------------------users_table----------------
+  
+def create_users_table():
+  conn= get_connection()
+  cursor= conn.cursor()
+    
+  cursor.execute('''
+                   CREATE TABLE IF NOT EXISTS users(
+                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                     username TEXT NOT NULL UNIQUE,
+                     password TEXT NOT NULL
+                   )
+                   ''')
+    
   conn.commit()
   conn.close()
   
@@ -63,13 +82,13 @@ def delete_product_from_db(product_id):
 
 # ------------- UPDATE BY ID --------------------
 
-def update_product_by_id_db(product_id, new_name):
+def update_product_by_id_db(product_id, name):
   conn= get_connection()
   cursor=conn.cursor()
   
   cursor.execute (
                  "UPDATE products SET name=? WHERE id=?" ,
-                 (new_name, product_id) 
+                 (name, product_id) 
                  )
   
   conn.commit()
@@ -92,6 +111,17 @@ def search_product_from_db(name):
   conn.close()
   
   return[{'id': row[0], 'name': row[1]}  for row in rows]
+
+#------------ADD_USER----------------
+
+def add_user_to_db(username, password):
+  conn= get_connection()
+  cursor= conn.cursor()
+  
+  cursor.execute('INSERT INTO users (username,password) VALUES(?,?) ',
+                 (username,password,))
+  conn.commit()
+  conn.close()
                  
   
 

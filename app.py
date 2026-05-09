@@ -1,7 +1,7 @@
 from flask import Flask, request
 import time
 from service import *
-from db import init_db
+from db import *
 
 app = Flask(__name__)
 
@@ -69,15 +69,30 @@ def update_product_by_id (product_id):
 def search_product():
     #data = request.get_json(silent=True) or {}
     name = request.args.get('name', '').strip().lower()
-    request_id = int(time.time() * 1000)
+    request_id = generate_request_id()
 
     return search_product_service(name, request_id)
+  
+#------------ADD_USER-------------
+@app.route('/register', methods=['POST'])
+def register():
+  
+  
+  data= request.get_json(silent=True) or {}
+  
+  username= data.get('username','')
+  password= data.get('password')
+  request_id= generate_request_id()
+  
+  return register_user_service(username, password, request_id)
+    
 
 
 # ------------------
 
 if __name__ == '__main__':
   init_db()
+  create_users_table()
 
   app.run(host="0.0.0.0", port=5000)
   
