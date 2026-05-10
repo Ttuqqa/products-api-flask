@@ -86,7 +86,23 @@ def register():
   
   return register_user_service(username, password, request_id)
     
+#-----------LOG IN-------------
 
+@app.route('/login', methods=['POST'])
+def login():
+
+    data = request.get_json()
+
+    username = data.get('username')
+    password = data.get('password')
+
+    request_id = generate_request_id()
+
+    return login_user_service(
+        username,
+        password,
+        request_id
+    )
 
 # ------------------
 

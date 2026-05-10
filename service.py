@@ -4,6 +4,7 @@ from utils.logger import log
 from utils.validation import *
 from utils.error_handler import handle_errors
 from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 
 
 #---------ADD-----------
@@ -136,3 +137,53 @@ def register_user_service(username, password, request_id):
   
   log(f'User registered successfully {username}', request_id)
   return{'sucsess': True, 'data':f'user {username} registered successfully'}, 201
+
+
+
+#--------------LOG IN----------------
+
+@handle_errors
+def login_user_service(username, password, request_id):
+
+    log(f"Login request received for {username}", request_id)
+
+    error = validate_user(username, password)
+
+    if error:
+        log(f"Validation failed: {error}", request_id, level="ERROR")
+        return error
+
+    user = get_user_by_username(username)
+
+    if not user:
+        log(f"User not found: {username}", request_id, level="ERROR")
+
+        return {
+            'success': False,
+            'error': 'invalid username or password'
+        }, 401
+
+    stored_password = user[2]
+
+    is_correct = check_password_hash(
+        stored_password,
+        password
+    )
+
+    if not is_correct:
+
+        log(f"Wrong password for {username}",
+            request_id,
+            level="ERROR")
+
+        return {
+            'success': False,
+            'error': 'invalid username or password'
+        }, 401
+
+    log(f"User logged in successfully: {username}", request_id)
+
+    return {
+        'success': True,
+        'message': f'welcome {username}'
+    }, 200

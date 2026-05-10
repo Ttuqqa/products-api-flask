@@ -122,6 +122,23 @@ def add_user_to_db(username, password):
                  (username,password,))
   conn.commit()
   conn.close()
+  
+  
+#-----------GET USER BY USERNAME--------
+
+def get_user_by_username(username):
+  
+  conn= get_connection()
+  cursor= conn.cursor()
+  
+  cursor.execute(' SELECT * FROM users WHERE username=?',
+                 (username,))
+  
+  user= cursor.fetchone()
+  conn.close()
+  
+  return user
+  
                  
   
 
