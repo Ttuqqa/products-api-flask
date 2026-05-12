@@ -5,6 +5,9 @@ from utils.validation import *
 from utils.error_handler import handle_errors
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
+import datetime
+import jwt
+from utils.secrets import SECRET_KEY
 
 
 #---------ADD-----------
@@ -158,32 +161,27 @@ def login_user_service(username, password, request_id):
     if not user:
         log(f"User not found: {username}", request_id, level="ERROR")
 
-        return {
-            'success': False,
-            'error': 'invalid username or password'
-        }, 401
+        return {'success': False,'error': 'invalid username or password'}, 401
 
     stored_password = user[2]
 
-    is_correct = check_password_hash(
-        stored_password,
-        password
-    )
+    is_correct = check_password_hash( stored_password,password)
 
     if not is_correct:
 
-        log(f"Wrong password for {username}",
-            request_id,
-            level="ERROR")
+        log(f"Wrong password for {username}",request_id,level="ERROR")
 
-        return {
-            'success': False,
-            'error': 'invalid username or password'
-        }, 401
+        return {'success': False,'error': 'invalid username or password'}, 401
 
     log(f"User logged in successfully: {username}", request_id)
-
-    return {
-        'success': True,
-        'message': f'welcome {username}'
-    }, 200
+    
+    token= jwt.encode ({
+      "username": username,
+      "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    },
+    SECRET_KEY,
+    algorithm= "HS256"
+    
+    )
+    
+    return{'success': True, 'token':token},200

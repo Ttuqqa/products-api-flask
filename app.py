@@ -1,4 +1,5 @@
 from flask import Flask, request
+from utils.auth import token_required
 import time
 from service import *
 from db import *
@@ -44,6 +45,7 @@ def get_products():
 
 
 @app.route('/products/<int:product_id>', methods=['DELETE'])
+@token_required
 def delete_products(product_id):
     #data = request.get_json(silent=True) or {}
     #product_id = data.get('id', '')
