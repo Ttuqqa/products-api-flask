@@ -47,8 +47,10 @@ def get_products():
 @app.route('/products/<int:product_id>', methods=['DELETE'])
 @token_required
 def delete_products(product_id):
+    
     #data = request.get_json(silent=True) or {}
     #product_id = data.get('id', '')
+    print("Current User:", request.current_user)
     request_id= generate_request_id()
 
     return delete_product_service(product_id, request_id)
