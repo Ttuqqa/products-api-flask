@@ -19,7 +19,7 @@ def add_product_service(name, request_id):
     error = validate_product_name(name)
     if error:
       log(f'Validation failed for {name}: {error}', request_id, level= 'ERROR')
-      return error
+      return {'success':False, "error":error},400
       
       
     
@@ -77,7 +77,7 @@ def update_product_service(product_id, name, request_id):
     error= validate_product_name(name)
     if error :
       log(f'Validation failed: {error} ({name})', request_id=request_id, level='ERROR')
-      return error
+      return {'success':False, "error":error},400
 
     if not product_id:
         log("Validation failed: id is required",
@@ -110,7 +110,7 @@ def search_product_service(name, request_id):
     error = validate_product_name(name)
     if error:
         log(f'Validation failed for input: {name}', request_id, level='ERROR')
-        return error
+        return {"success":False, "error":error}
 
     results = search_product_from_db(name)
 
@@ -132,14 +132,14 @@ def register_user_service(username, password, request_id):
   error= validate_user(username, password)
   if error:
     log(f'Validation failed {error}', request_id, level='ERROR')
-    return error
+    return {'success': False,'error': error}, 400
   
   hashed_password= generate_password_hash(password)
   
   add_user_to_db(username, hashed_password)
   
   log(f'User registered successfully {username}', request_id)
-  return{'sucsess': True, 'data':f'user {username} registered successfully'}, 201
+  return{'succsess': True, 'data':f'user {username} registered successfully'}, 201
 
 
 
