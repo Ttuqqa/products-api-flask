@@ -122,6 +122,14 @@ PUT /products/<id>
 
 Protected Route ✅
 
+Request Body:
+
+```json
+{
+  "name": "Pasta"
+}
+```
+
 ---
 
 ### Delete Product
