@@ -108,8 +108,7 @@ Request Body:
 
 ```json
 {
-  "name": "Laptop",
-  "price": 1000
+  "name": "milk"
 }
 ```
 
