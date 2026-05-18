@@ -3,52 +3,60 @@ from db import *
 from utils.logger import log
 from utils.validation import *
 from utils.error_handler import handle_errors
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
 import jwt
 from utils.secrets import SECRET_KEY
+from utils.response import success_response, error_response
 
 
-#---------ADD-----------
+# ---------------- ADD PRODUCT ----------------
 @handle_errors
 def add_product_service(name, request_id):
-  
+
     log('Add product request received', request_id)
-  
+
     error = validate_product_name(name)
     if error:
-      log(f'Validation failed for {name}: {error}', request_id, level= 'ERROR')
-      return {'success':False, "error":error},400
-      
-      
-    
-    log(f"Adding product to DB: {name}", request_id)
+        log(f'Validation failed for {name}: {error}', request_id, level='ERROR')
+        return error_response(
+            message='Validation failed',
+            error=error
+        ), 400
+
     add_product_to_db(name)
 
     log(f"Product added successfully: {name}", request_id)
-    return {'success': True, 'data': f'{name} added successfully'}, 201
 
-  
+    return success_response(
+        message='Product created successfully',
+        data={
+            'name': name,
+            'status': 'created'
+        }
+    ), 201
 
-#---------------GET-------------
+
+# ---------------- GET PRODUCTS ----------------
 @handle_errors
 def get_products_service(request_id):
 
     log("Get products request received", request_id)
 
-    
-    log("Fetching products from DB", request_id)
-
     products = get_products_from_db()
 
     log(f"Fetched {len(products)} products", request_id)
 
-    return {'success': True,'data': products}, 200
+    return success_response(
+        message='Products retrieved successfully',
+        data={
+            'products': products,
+            'count': len(products)
+        }
+    ), 200
 
 
-
-#--------DELETE-------
+# ---------------- DELETE PRODUCT ----------------
 @handle_errors
 def delete_product_service(product_id, request_id):
 
@@ -56,52 +64,69 @@ def delete_product_service(product_id, request_id):
 
     if product_id is None:
         log("Validation failed: id is required", request_id=request_id, level="ERROR")
-        return {'success': False, 'error': 'id is required'}, 400
+        return error_response(
+            message='Validation failed',
+            error='product_id is required'
+        ), 400
 
     affected = delete_product_from_db(product_id)
 
     if affected == 0:
         log(f"Delete failed: id {product_id} not found", request_id=request_id, level="ERROR")
-        return {'success': False, 'error': f'{product_id} not found'}, 404
+        return error_response(
+            message='Delete failed',
+            error=f'Product {product_id} not found'
+        ), 404
 
     log(f"Product deleted successfully: {product_id}", request_id)
-    return {'success': True, 'data': f'product {product_id} deleted successfully'}, 200
-      
-      
-# ------------- UPDATE BY ID --------------------
+
+    return success_response(
+        message='Product deleted successfully',
+        data={
+            'id': product_id,
+            'status': 'deleted'
+        }
+    ), 200
+
+
+# ---------------- UPDATE PRODUCT ----------------
 @handle_errors
 def update_product_service(product_id, name, request_id):
 
     log(f"Update request received for id: {product_id}", request_id)
-    
-    error= validate_product_name(name)
-    if error :
-      log(f'Validation failed: {error} ({name})', request_id=request_id, level='ERROR')
-      return {'success':False, "error":error},400
+
+    error = validate_product_name(name)
+    if error:
+        return error_response(
+            message='Validation failed',
+            error=error
+        ), 400
 
     if not product_id:
-        log("Validation failed: id is required",
-            request_id=request_id, level="ERROR")
-        return {'success': False, 'error': 'id is required'}, 400
-
-    
-    log(f"Updating product {product_id} to: {name}", request_id)
+        return error_response(
+            message='Validation failed',
+            error='product_id is required'
+        ), 400
 
     affected = update_product_by_id_db(product_id, name)
 
     if affected == 0:
-            log(f"Update failed: id {product_id} not found",
-                request_id=request_id, level="ERROR")
-            return {'success': False,'error': f'product with id {product_id} not found'
-                    }, 404
+        return error_response(
+            message='Update failed',
+            error=f'Product {product_id} not found'
+        ), 404
 
-    log(f"Product updated successfully: {product_id}", request_id)
-    return {'success': True,'data': f'product {product_id} updated successfully to {name}'}, 200
+    return success_response(
+        message='Product updated successfully',
+        data={
+            'id': product_id,
+            'name': name,
+            'status': 'updated'
+        }
+    ), 200
 
 
-      
-#----------------search---------------
-
+# ---------------- SEARCH PRODUCT ----------------
 @handle_errors
 def search_product_service(name, request_id):
 
@@ -109,79 +134,95 @@ def search_product_service(name, request_id):
 
     error = validate_product_name(name)
     if error:
-        log(f'Validation failed for input: {name}', request_id, level='ERROR')
-        return {"success":False, "error":error}
+        return error_response(
+            message='Validation failed',
+            error=error
+        ), 400
 
     results = search_product_from_db(name)
 
     if not results:
-        log(f'{name} not found', request_id, level='ERROR')
-        return {'success': False,'error': f'{name} not found'}, 404
+        return error_response(
+            message='Product not found',
+            error=f'No product matching {name}'
+        ), 404
 
-    log(f"Product found: {name}", request_id)
+    return success_response(
+        message='Product found successfully',
+        data={
+            'name': name,
+            'results': results,
+            'count': len(results)
+        }
+    ), 200
 
-    return {"success": True, "data": results, 'message':f'{name} found'}, 200
-  
-  
-#---------------REGISTER_USER--------------
+
+# ---------------- REGISTER USER ----------------
 @handle_errors
 def register_user_service(username, password, request_id):
-  
-  log(f'register request recieved for {username}', request_id)
-  
-  error= validate_user(username, password)
-  if error:
-    log(f'Validation failed {error}', request_id, level='ERROR')
-    return {'success': False,'error': error}, 400
-  
-  hashed_password= generate_password_hash(password)
-  
-  add_user_to_db(username, hashed_password)
-  
-  log(f'User registered successfully {username}', request_id)
-  return{'succsess': True, 'data':f'user {username} registered successfully'}, 201
+
+    log(f'register request received for {username}', request_id)
+
+    error = validate_user(username, password)
+    if error:
+        return error_response(
+            message='Validation failed',
+            error=error
+        ), 400
+
+    hashed_password = generate_password_hash(password)
+
+    add_user_to_db(username, hashed_password)
+
+    return success_response(
+        message='User registered successfully',
+        data={
+            'username': username,
+            'status': 'registered'
+        }
+    ), 201
 
 
-
-#--------------LOG IN----------------
-
+# ---------------- LOGIN USER ----------------
 @handle_errors
 def login_user_service(username, password, request_id):
 
     log(f"Login request received for {username}", request_id)
 
     error = validate_user(username, password)
-
     if error:
-        log(f"Validation failed: {error}", request_id, level="ERROR")
-        return error
+        return error_response(
+            message='Validation failed',
+            error=error
+        ), 400
 
     user = get_user_by_username(username)
 
     if not user:
-        log(f"User not found: {username}", request_id, level="ERROR")
-
-        return {'success': False,'error': 'invalid username or password'}, 401
+        return error_response(
+            message='Authentication failed',
+            error='Invalid username or password'
+        ), 401
 
     stored_password = user[2]
 
-    is_correct = check_password_hash( stored_password,password)
+    if not check_password_hash(stored_password, password):
+        return error_response(
+            message='Authentication failed',
+            error='Invalid username or password'
+        ), 401
 
-    if not is_correct:
-
-        log(f"Wrong password for {username}",request_id,level="ERROR")
-
-        return {'success': False,'error': 'invalid username or password'}, 401
-
-    log(f"User logged in successfully: {username}", request_id)
-    
-    token= jwt.encode ({
-      "username": username,
-      "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    token = jwt.encode({
+        "username": username,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     },
     SECRET_KEY,
-    algorithm= "HS256"
-    
-    )
-    
-    return{'success': True, 'token':token},200
+    algorithm="HS256")
+
+    return success_response(
+        message='Login successful',
+        data={
+            'token': token,
+            'status': 'authenticated'
+        }
+    ), 200
